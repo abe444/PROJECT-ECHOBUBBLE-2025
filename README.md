@@ -1,3 +1,3 @@
 ### ECHOBUBBLE 2025
 
-An AI powered archiving "engine" of sorts engine" of sorts built primarily with Golang. 
+An AI powered "search engine" built to capture archived snapshots of the internet. 

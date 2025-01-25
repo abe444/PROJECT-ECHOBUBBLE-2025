@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Scanner</title>
+    <link rel="stylesheet" href="/css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>OSINT Scanner</h1>
+            <form action="/scan/" onsubmit="event.preventDefault(); window.location.href='/scan/' + document.getElementById('url').value;" method="POST">
+            <input type="text" id="url" name="url" value="{{ .url }}" placeholder="Enter a domain" required>
+            <button type="submit">Scan</button>
+        </form>
+
+        {{ if .error }}
+        <div class="error-card">
+            <div class="error-header">
+                <h3>⚠️ Error Details</h3>
+            </div>
+            <div class="error-content">
+                <p>{{ .error }}</p>
+            </div>
+        </div>
+        {{ end }}
+
+        {{ if .result }}
+        <h2>Results for {{ .url }}</h2>
+        <div class="results-grid">
+            <div class="result-card whois-section">
+                <h3>WHOIS</h3>
+                <div class="card-content">
+                    {{ with index .result "whois" }}
+                    {{ if .parse_failed }}
+                    <pre class="raw-whois">{{ .raw_whois }}</pre>
+                    {{ else }}
+                    <ul>
+                        <li><strong>Domain Name:</strong> {{ .domain_name }}</li>
+                        <li><strong>Puny code:</strong> {{ .puny_code }}</li>
+                        <li><strong>WHOIS Server:</strong> {{ .whois_server }}</li>
+                        <li><strong>Updated Date:</strong> {{ .updated_date }}</li>
+                        <li><strong>Creation Date:</strong> {{ .creation_date }}</li>
+                        <li><strong>Expiry Date:</strong> {{ .expiry_date }}</li>
+                        <li><strong>DNSSEC:</strong> {{ .dnssec }}</li>
+                        <li><strong>Registrar:</strong> {{ .registrar }}</li>
+                        <li><strong>ID:</strong> {{ .id }}</li>
+                    </ul>
+                    {{ end }}
+                    {{ end }}
+                </div>
+            </div>
+
+            <div class="result-card subdomain-section">
+                <h3>Subdomains</h3>
+                <div class="card-content">
+                    <div class="subdomain-list">
+                        {{ if index .result "subdomains" }}
+                        <ul>
+                            {{ range index .result "subdomains" }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                        {{ else }}
+                        <p>No subdomains found</p>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card nslookup-section">
+                <h3>DNS Records</h3>
+                <div class="card-content">
+                    {{ with index .result "nslookup" }}
+                    {{ if .A }}
+                    <div class="record-group">
+                        <h4>A Records (IPv4)</h4>
+                        <ul>
+                            {{ range .A }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+
+                    {{ if .AAAA }}
+                    <div class="record-group">
+                        <h4>AAAA Records (IPv6)</h4>
+                        <ul>
+                            {{ range .AAAA }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+
+                    {{ if .MX }}
+                    <div class="record-group">
+                        <h4>MX Records</h4>
+                        <ul>
+                            {{ range .MX }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+
+                    {{ if .TXT }}
+                    <div class="record-group">
+                        <h4>TXT Records</h4>
+                        <ul>
+                            {{ range .TXT }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+
+                    {{ if .NS }}
+                    <div class="record-group">
+                        <h4>NS Records</h4>
+                        <ul>
+                            {{ range .NS }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+
+                    {{ if .CNAME }}
+                    <div class="record-group">
+                        <h4>CNAME Records</h4>
+                        <ul>
+                            {{ range .CNAME }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+
+                    {{ if .PTR }}
+                    <div class="record-group">
+                        <h4>PTR Records</h4>
+                        <ul>
+                            {{ range .PTR }}
+                            <li>{{ . }}</li>
+                            {{ end }}
+                        </ul>
+                    </div>
+                    {{ end }}
+                    {{ end }}
+                </div>
+            </div>
+
+            <div class="result-card serverip-section">
+                <h3>Server Information</h3>
+                <div class="card-content">
+                    {{ with index .result "serverip" }}
+                    {{ range . }}
+                    <div class="ip-info">
+                        <ul>
+                            <li><strong>IP:</strong> {{ .IP }}</li>
+                            <li><strong>Hostname:</strong> {{ .Hostname }}</li>
+                            <li><strong>Location:</strong> {{ .City }}, {{ .Region }}, {{ .Country }}</li>
+                            <li><strong>Organization:</strong> {{ .Organization }}</li>
+                            <li><strong>Timezone:</strong> {{ .Timezone }}</li>
+                        </ul>
+                    </div>
+                    {{ end }}
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+        {{ end }}
+    </div>
+</body>
+
+</html>

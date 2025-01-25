@@ -1,3 +1,8 @@
-### ECHOBUBBLE 2025
+OSINT Scanner 
 
-An AI powered "search engine" built to capture archived snapshots of the internet. 
+Passively scans the following:
+
+- WHOIS
+- DNS
+- Subdomains
+- Server location

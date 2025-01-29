@@ -7,7 +7,6 @@ import (
 )
 
 func ResultsPage(c *gin.Context) {
-	// Retrieve results from the context or session
 	scanResult, exists := c.Get("scanResult")
 	if !exists {
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{

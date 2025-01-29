@@ -11,10 +11,25 @@
 <body>
     <div class="container">
         <h1>OSINT Scanner</h1>
-            <form action="/scan/" onsubmit="event.preventDefault(); window.location.href='/scan/' + document.getElementById('url').value;" method="POST">
+        <form action="/scan/"
+            onsubmit="startLoading(); event.preventDefault(); window.location.href='/scan/' + document.getElementById('url').value;"
+            method="POST">
             <input type="text" id="url" name="url" value="{{ .url }}" placeholder="Enter a domain" required>
             <button type="submit">Scan</button>
         </form>
+
+        <div id="loading" class="loading-circle" style="display: none;">
+            <div class="loader"></div>
+            <div id="jobStatus">
+                <p><strong>Scan Progress:</strong></p>
+                <ul>
+                    <li id="whoisStatus">WHOIS: <span class="status">Pending</span></li>
+                    <li id="subdomainStatus">Subdomains: <span class="status">Pending</span></li>
+                    <li id="nslookupStatus">DNS Lookup: <span class="status">Pending</span></li>
+                    <li id="serveripStatus">Server IP: <span class="status">Pending</span></li>
+                </ul>
+            </div>
+        </div>
 
         {{ if .error }}
         <div class="error-card">
@@ -29,6 +44,19 @@
 
         {{ if .result }}
         <h2>Results for {{ .url }}</h2>
+        <div class="result-card urlscan-section">
+            <h3>Threat Scanning</h3>
+            <div class="card-content">
+                {{ with index .result "urlscan" }}
+                <ul>
+                    <li><strong>OpenPhish:</strong> {{ if .openphish }}Malicious [Threat Detected]{{ else }}Clean{{ end
+                        }}</li>
+                    <li><strong>URLhaus:</strong> {{ if .urlhaus }}Malicious [Threat Detected]{{ else }}Clean{{ end }}
+                    </li>
+                </ul>
+                {{ end }}
+            </div>
+        </div>
         <div class="results-grid">
             <div class="result-card whois-section">
                 <h3>WHOIS</h3>
@@ -167,14 +195,58 @@
                             <li><strong>Organization:</strong> {{ .Organization }}</li>
                             <li><strong>Timezone:</strong> {{ .Timezone }}</li>
                         </ul>
+                        {{ if .MapImage }}
+                        <div class="map-image">
+                            <img src="/{{ .MapImage }}" alt="Location Map">
+                        </div>
+                        {{ end }}
                     </div>
                     {{ end }}
                     {{ end }}
                 </div>
             </div>
+            {{ if .MapImage }}
+            <div class="map-container">
+                <img src="/{{ .MapImage }}" alt="Location Map" class="location-map">
+            </div>
+            {{ end }}
         </div>
         {{ end }}
     </div>
 </body>
+
+<script>
+    function startLoading() {
+        document.getElementById('loading').style.display = 'block';
+        updateJobStatus('whoisStatus', 'In Progress');
+        updateJobStatus('subdomainStatus', 'In Progress');
+        updateJobStatus('nslookupStatus', 'In Progress');
+        updateJobStatus('serveripStatus', 'In Progress');
+    }
+
+    function updateJobStatus(jobId, status, error = null) {
+        const jobElement = document.getElementById(jobId);
+        if (jobElement) {
+            const statusElement = jobElement.querySelector('.status');
+            statusElement.textContent = status;
+            if (error) {
+                statusElement.style.color = 'red';
+                statusElement.textContent += ` (Error: ${error})`;
+            } else {
+                statusElement.style.color = 'green';
+            }
+        }
+    }
+
+    window.onload = function () {
+        const jobStatus = JSON.parse(sessionStorage.getItem('jobStatus') || '{}');
+        if (jobStatus.whois) updateJobStatus('whoisStatus', jobStatus.whois.status, jobStatus.whois.error);
+        if (jobStatus.subdomains) updateJobStatus('subdomainStatus', jobStatus.subdomains.status, jobStatus.subdomains.error);
+        if (jobStatus.nslookup) updateJobStatus('nslookupStatus', jobStatus.nslookup.status, jobStatus.nslookup.error);
+        if (jobStatus.serverip) updateJobStatus('serveripStatus', jobStatus.serverip.status, jobStatus.serverip.error);
+
+        sessionStorage.removeItem('jobStatus');
+    };
+</script>
 
 </html>
